@@ -1,8 +1,9 @@
 namespace = "GyDX55sFnbr9yCB-mPyXsy4kAUPUY8ftpWX62s6UcnvfIQ=="
-local_channels = ['flexlab1/L2']
+local_channels = ['flexlab1/L2'] # MUST CHANGE TO UNIQUE LOCAL CHANNEL for lpbc
 reference_channels = ['flexlab1/L1']
-entity = 'user.ent'
+entity = 'lpbc-leo-flexlab-1.ent'
 wavemq = '127.0.0.1:4516'
+spbc = 'spbc-leo-flexlab-1'
+name = 'lpbc-leo-flexlab-1'
 rate = 2 # number of seconds between calls to 'step'
-name = 'lpbctest'
-spbc = 'spbctest'
+        
