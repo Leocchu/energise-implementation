@@ -147,12 +147,12 @@ class democontroller(pbc.LPBCProcess):
         self.iteration_counter += 1
 
         if phasor_target is None and self.Vang_targ == "initialize":
-            print("No target received by SPBC")
+            print("Iteration", self.iteration_counter, ": No target received by SPBC")
             return
 
         else:
             if phasor_target is None:
-                print("No target received by SPBC: Using last received target")
+                print("Iteration", self.iteration_counter, ": No target received by SPBC: Using last received target")
 
             else:
                 "Data extractions"
@@ -160,26 +160,26 @@ class democontroller(pbc.LPBCProcess):
                 self.phase_channels = [0] * len(phasor_target['phasor_targets'])
                 if len(self.phase_channels) > 1:
                     for i in range(len(self.phase_channels)):
-                        phase_channels[i] = (phasor_target['phasor_targets'][i]['channelName'])
+                        self.phase_channels[i] = (phasor_target['phasor_targets'][i]['channelName'])
                     if 'L1' in phase_channels:
-                        for i, chan in enumerate(phase_channels):
+                        for i, chan in enumerate(self.phase_channels):
                             if chan == 'L1':
-                                phase_channels[i] = 0
+                                self.phase_channels[i] = 0
                             if chan == 'L2':
-                                phase_channels[i] = 1
+                                self.phase_channels[i] = 1
                             if chan == 'L3':
-                                phase_channels[i] = 2 - (3 - len(phase_channels))
+                                self.phase_channels[i] = 2 - (3 - len(self.phase_channels))
                     else:
-                        for i, chan in enumerate(phase_channels):
+                        for i, chan in enumerate(self.phase_channels):
                             if chan == 'L2':
-                                phase_channels[i] = 0
+                                self.phase_channels[i] = 0
                             if chan == 'L3':
-                                phase_channels[i] = 2 - (3 - len(phase_channels))
+                                self.phase_channels[i] = 2 - (3 - len(self.phase_channels))
                 if self.Vang_targ == "initialize":
-                    self.Vang_targ = np.empty((len(phase_channels), 1))
-                    self.Vmag_targ = np.empty((len(phase_channels), 1))
-                    self.kvbase = np.empty((len(phase_channels), 1))
-                    self.sbase = np.empty((len(phase_channels), 1))
+                    self.Vang_targ = np.empty((len(self.phase_channels), 1))
+                    self.Vmag_targ = np.empty((len(self.phase_channels), 1))
+                    self.kvbase = np.empty((len(self.phase_channels), 1))
+                    self.sbase = np.empty((len(self.phase_channels), 1))
 
                 # extract phasor target values for each phase
                 for channel, phase in enumerate(phase_channels):
@@ -291,8 +291,8 @@ class democontroller(pbc.LPBCProcess):
             for inv, P, Q in zip(self.inv_id, P_ctrl, Q_ctrl):
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},P_ctrl={P},pf_ctrl={self.pf_ctrl}")
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},Q_ctrl={Q},pf_ctrl={self.pf_ctrl}")
-            
-            # status sent back to SPBC
+
+            "Status feedback to SPBC"
             status = {}
             status['phasor_errors'] = {
                     'V': self.phasor_error_mag,
