@@ -277,17 +277,6 @@ class democontroller(pbc.LPBCProcess):
             self.Pcmd = self.Pcmd_pu * (self.sbase * 1000)
             self.Qcmd = self.Qcmd_pu * (self.sbase * 1000)
 
-            # status sent back to SPBC
-            status = {}
-            status['phasor_errors'] = {
-                    'V': self.phasor_error_mag,
-                    'delta': self.phasor_error_ang
-                }
-            status['p_saturated'] = self.ICDI_sigP
-            status['q_saturated'] = self.ICDI_sigQ
-            status['p_max'] = self.Pmax
-            status['q_max'] = self.Qmax
-
             "http to inverters"
             # Power triangles math
             inv_p_max = self.pf_ctrl * self.inv_s_max
@@ -302,6 +291,17 @@ class democontroller(pbc.LPBCProcess):
             for inv, P, Q in zip(self.inv_id, P_ctrl, Q_ctrl):
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},P_ctrl={P},pf_ctrl={self.pf_ctrl}")
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},Q_ctrl={Q},pf_ctrl={self.pf_ctrl}")
+            
+            # status sent back to SPBC
+            status = {}
+            status['phasor_errors'] = {
+                    'V': self.phasor_error_mag,
+                    'delta': self.phasor_error_ang
+                }
+            status['p_saturated'] = self.ICDI_sigP
+            status['q_saturated'] = self.ICDI_sigQ
+            status['p_max'] = self.Pmax
+            status['q_max'] = self.Qmax
 
             return status
 
