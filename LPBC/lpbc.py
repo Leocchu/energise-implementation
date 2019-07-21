@@ -131,6 +131,7 @@ class democontroller(pbc.LPBCProcess):
         self.Vang_relative_pu = np.array([])
         self.Vmag_relative_pu = np.array([])
         self.phase_channels = []
+        self.phases = []
 
         #https config
         self.inv_id = 1 # # Change inverter id to unique inverter in HIL(lpbc number)
@@ -157,10 +158,12 @@ class democontroller(pbc.LPBCProcess):
             else:
                 "Data extractions"
                 # extract out correct index of phasor target for each phase
+                self.phases = phasor_target['phasor_targets'][0]['channelName']
                 self.phase_channels = [0] * len(phasor_target['phasor_targets'])
                 if len(self.phase_channels) > 1:
                     for i in range(len(self.phase_channels)):
                         self.phase_channels[i] = (phasor_target['phasor_targets'][i]['channelName'])
+                    self.phases = self.phase_channels
                     if 'L1' in phase_channels:
                         for i, chan in enumerate(self.phase_channels):
                             if chan == 'L1':
@@ -175,6 +178,7 @@ class democontroller(pbc.LPBCProcess):
                                 self.phase_channels[i] = 0
                             if chan == 'L3':
                                 self.phase_channels[i] = 2 - (3 - len(self.phase_channels))
+                    self.phases = sorted(self.phases)
                 if self.Vang_targ == "initialize":
                     self.Vang_targ = np.empty((len(self.phase_channels), 1))
                     self.Vmag_targ = np.empty((len(self.phase_channels), 1))
@@ -294,6 +298,7 @@ class democontroller(pbc.LPBCProcess):
 
             "Status feedback to SPBC"
             status = {}
+            status['phases'] = self.phases
             status['phasor_errors'] = {
                     'V': self.phasor_error_mag,
                     'delta': self.phasor_error_ang
