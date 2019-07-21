@@ -161,10 +161,11 @@ class democontroller(pbc.LPBCProcess):
                 self.phases = phasor_target['phasor_targets'][0]['channelName']
                 self.phase_channels = [0] * len(phasor_target['phasor_targets'])
                 if len(self.phase_channels) > 1:
+                    self.phases = [0] * len(self.phase_channels)
                     for i in range(len(self.phase_channels)):
-                        self.phase_channels[i] = (phasor_target['phasor_targets'][i]['channelName'])
-                    self.phases = self.phase_channels
-                    if 'L1' in phase_channels:
+                        self.phase_channels[i] = phasor_target['phasor_targets'][i]['channelName']
+                        self.phases[i] = phasor_target['phasor_targets'][i]['channelName']
+                    if 'L1' in self.phase_channels:
                         for i, chan in enumerate(self.phase_channels):
                             if chan == 'L1':
                                 self.phase_channels[i] = 0
@@ -179,6 +180,7 @@ class democontroller(pbc.LPBCProcess):
                             if chan == 'L3':
                                 self.phase_channels[i] = 2 - (3 - len(self.phase_channels))
                     self.phases = sorted(self.phases)
+                    
                 if self.Vang_targ == "initialize":
                     self.Vang_targ = np.empty((len(self.phase_channels), 1))
                     self.Vmag_targ = np.empty((len(self.phase_channels), 1))
