@@ -69,15 +69,15 @@ class democontroller(pbc.LPBCProcess):
                     break
             if flag[phase] == 1:
                 print("Phase", phase, ", Iteration ", self.iteration_counter,
-                      ": No timestamp found. Using previous timestamps")
+                      ": No timestamp found")
 
     def PQ_solver(self, local_phasors, phase_channels):
         # Initialize
-        V_mag = [0] * len(phase_channels)
-        V_ang = [0] * len(phase_channels)
-        I_mag = [0] * len(phase_channels)
-        I_ang = [0] * len(phase_channels)
-        theta = [0] * len(phase_channels)
+        V_mag = [0.0] * len(phase_channels)
+        V_ang = [0.0] * len(phase_channels)
+        I_mag = [0.0] * len(phase_channels)
+        I_ang = [0.0] * len(phase_channels)
+        theta = [0.0] * len(phase_channels)
 
         if np.size(self.Pact) == 0:
             # Initialize
@@ -131,7 +131,7 @@ class democontroller(pbc.LPBCProcess):
         self.Vang_relative_pu = np.array([])
         self.Vmag_relative_pu = np.array([])
         self.phase_channels = []
-        self.phases = []
+        self.phases =[]
 
         #https config
         self.inv_id = 1 # # Change inverter id to unique inverter in HIL(lpbc number)
@@ -180,7 +180,7 @@ class democontroller(pbc.LPBCProcess):
                             if chan == 'L3':
                                 self.phase_channels[i] = 2 - (3 - len(self.phase_channels))
                     self.phases = sorted(self.phases)
-                    
+
                 if self.Vang_targ == "initialize":
                     self.Vang_targ = np.empty((len(self.phase_channels), 1))
                     self.Vmag_targ = np.empty((len(self.phase_channels), 1))
@@ -188,7 +188,8 @@ class democontroller(pbc.LPBCProcess):
                     self.sbase = np.empty((len(self.phase_channels), 1))
 
                 # extract phasor target values for each phase
-                for channel, phase in enumerate(phase_channels):
+                for channel, phase in enumerate(self.phase_channels):
+
                     self.Vmag_targ[phase] = phasor_target['phasor_targets'][channel]['magnitude']
                     self.Vang_targ[phase] = phasor_target['phasor_targets'][channel]['angle']
                     self.kvbase[phase] = phasor_target['phasor_targets'][channel]['kvbase']['value']
@@ -302,13 +303,13 @@ class democontroller(pbc.LPBCProcess):
             status = {}
             status['phases'] = self.phases
             status['phasor_errors'] = {
-                    'V': self.phasor_error_mag,
-                    'delta': self.phasor_error_ang
+                    'V': list(self.phasor_error_mag.ravel()),
+                    'delta': list(self.phasor_error_ang.ravel())
                 }
-            status['p_saturated'] = self.ICDI_sigP
-            status['q_saturated'] = self.ICDI_sigQ
-            status['p_max'] = self.Pmax
-            status['q_max'] = self.Qmax
+            status['p_saturated'] = list(self.ICDI_sigP.ravel())
+            status['q_saturated'] = list(self.ICDI_sigQ.ravel())
+            status['p_max'] = list(self.Pmax.ravel())
+            status['q_max'] = list(self.Qmax.ravel())
 
             return status
 
