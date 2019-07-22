@@ -1,0 +1,50 @@
+lpbc.py implements a PI controller for a single or multi-phase local phasor-based controller (LPBC) used
+in HIL testing. The controller is invoked by calling on 'step' function every iteration.
+
+phasor_calc function is called on by step to calculate the relative phasor measurements, self.Vang_relative and
+self.Vmag_relative. phasor_calc operates as follows:
+Takes the most recent local uPMU reading, compares it to the reference uPMU readings, and finds the readings that 
+are within 2ms to calculate a relative phasor. If no desired reading is found with latest local uPMU reading, the 
+next in line local uPMU reading is used. If no match is found within the entire local uPMU data stream, then the 
+function returns the relative phasor from the previous iteration. 
+
+PQ_solver function is called on by step to calculate the P and Q from the inverters, self.Pact and self.Qact,
+respectively. This function takes in local voltage and current phasor measurements to derive the P and Q from
+inverters. 
+
+Step function is called every x seconds specified by user in the configuration .toml file. local_channels and 
+reference_channels in configuration .toml must to set to correct local and reference uPMUs. Within the .toml
+config file, make sure phases are in consecutive order in config. Voltage first, then current. i.e., L1, L2, I1, 
+I2. When 'step' is called, the phasor target and local relative phasor will be compared to produce a phasor error 
+that feeds into the feedback control loop. If no phasor target is received by the supervisory phasor-based control
+(SPBC), then the last received target from SPBC will be used. If LPBC never received an initial target, then the 
+code will return from function. Once a target from SPBC is received, the code will extract out the correct data
+associated with the correct phase. The process of 'step' is as follows (multi-phase actuation will be processed 
+with a vector of the phases instead of scalar value):
+
+1. Extract and sort phasor target data
+2. Call on phasor_calc to determine relative phasors
+3. Calculate phasor errors in per unit quantity
+4. Call on PQ_solver to determine P/Q from actuators
+5. Compare P/Q from inverters with P/Q command sent. If P/Q from inverters is less than P/Q command, then the 
+inverter is assumed to be saturated and integral action is halted. 
+6. The saturation counter, self.Psat and self.Qsat, is initialized by user to be of length n. Once saturation has
+occurred after n consecutive times, ICDI_sigP and ICDI_sigQ (boolean values), will be sent back to SPBC. If an 
+ICDI signal is sent, a P/Q max value, self.Pmax or self.Qmax, will be sent also. The P/Q max values will be the
+P/Q values generated from PQ_solver (i.e., the P/Q of the inverters when saturated).
+7. PI control algorithm using the phasor error and saturation condition. Control algorithm is calculated using per
+unit values
+8. Convert per unit values in actual values (W/ VARs). 
+9. Calculate the P/Q commands as a percentage of the inverter apparent power limit and power factor. 
+10. Send P/Q commands via http
+11. 'status' dict containing phases, phasor errors, P/Q ICDI signals, P/Q max is sent back to SPBC for evaluation.
+'status' is a dict where the value of the field is a list of numpy data type arguments (except for 'phases' 
+which is a native python string). For example, calling:
+"status['p_max']" will return: "[12.3]" for single-phase, and "[12.3, 15.3, 19.3]" for 3-phase.
+"status['p_saturated'] will return: "[False]" for single-phase, and "[False, False, False]" for 3-phase.
+
+
+
+
+
+    
