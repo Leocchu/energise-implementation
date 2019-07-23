@@ -36,7 +36,7 @@ P/Q values generated from PQ_solver (i.e., the P/Q of the inverters when saturat
 unit values
 8. Convert per unit values in actual values (W/ VARs). 
 9. Calculate the P/Q commands as a percentage of the inverter apparent power limit and power factor. 
-10. Send P/Q commands via http
+10. Send P/Q commands via http. If P/Q commands exceed inverter limit, commands will be truncated to inverter max.
 11. 'status' dict containing phases, phasor errors, P/Q ICDI signals, P/Q max is sent back to SPBC for evaluation.
 'status' is a dict where the value of the field is a list of numpy data type arguments (except for 'phases' 
 which is a native python string). For example, calling:
