@@ -296,6 +296,10 @@ class democontroller(pbc.LPBCProcess):
             #  Check hostname and port from Christoph
             #  Sends P and Q command to actuator
             for inv, P, Q in zip(self.inv_id, P_ctrl, Q_ctrl):
+                if P > inv_p_max:
+                    P = 100
+                if Q > inv_q_max:
+                    Q = 100
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},P_ctrl={P},pf_ctrl={self.pf_ctrl}")
                 requests.post(f"http://testhost.lbl.gov:1234/control?inv_id={inv},Q_ctrl={Q},pf_ctrl={self.pf_ctrl}")
 
