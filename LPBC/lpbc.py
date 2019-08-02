@@ -179,8 +179,9 @@ class democotroller(pbc.LPBCProcess):
             else:
                 "Data extractions"
                 # extract out correct index of phasor target for each phase
-                self.phases = phasor_target['phasor_targets'][0]['channelName']
-                self.phase_channels = [0] * len(phasor_target['phasor_targets'])
+                if len(self.phases) == 0:
+                    self.phases.append(phasor_target['phasor_targets'][0]['channelName'])
+                    self.phase_channels = [0] * len(phasor_target['phasor_targets'])
                 if len(self.phase_channels) > 1:
                     self.phases = [0] * len(self.phase_channels)
                     for i in range(len(self.phase_channels)):
