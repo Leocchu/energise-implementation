@@ -47,7 +47,7 @@ class democotroller(pbc.LPBCProcess):
         self.Vmag_relative_pu = np.array([])
         self.phase_channels = []
         self.phases = []
-        self.ametek_phase_shift = 0
+        self.ametek_phase_shift = 0 # TODO: ametek phase shift in degrees
 
         # https config
         self.inv_id = 1  # TODO: Change inverter id/s to unique inverter in HIL(lpbc number): Must be in ascending order
@@ -60,15 +60,15 @@ class democotroller(pbc.LPBCProcess):
         self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only
         self.p_ctrl = np.array([])
         self.group_id = [0,1,2] # TODO: group id for motors corresponding to phase: Must be in ascending order
-        self.local_s_ratio = 500/3.3
+        self.local_s_ratio = 500/3.3 #TODO: Inverters should have ratio of 500/3.3 ; Load racks : 250
         self.Pcmd_inv = np.array([])
         self.Qcmd_inv = np.array([])
 
         # K gains
-        self.Kp_ang = 0.068
-        self.Ki_ang = 0.037
-        self.Kp_mag = 3.8
-        self.Ki_mag = 2.15
+        self.Kp_ang = 0.068 # TODO
+        self.Ki_ang = 0.037 # TODO
+        self.Kp_mag = 3.8 # TODO
+        self.Ki_mag = 2.15 #TODO
 
     def phasor_calc(self, local_phasors, reference_phasors, phase_channels):
         # Initialize
@@ -142,7 +142,7 @@ class democotroller(pbc.LPBCProcess):
             self.Qact = np.empty((len(phase_channels), 1))
 
         "Make sure phases are in consecutive order in config.  i.e., 123'/L1', 123'/L2, 123/C1, 123/C2, 123/L1, 123/L2" \
-        "Model voltages first, then inverter currents, then inverter voltages"
+        "Model voltages first, then inverter currents, then inverter voltages (all in consecutive order)"
         for phase in range(len(phase_channels)):
             V_mag[phase] = local_phasors[phase + (2 * len(phase_channels)) + 1][-1]['magnitude']
             V_ang[phase] = local_phasors[phase + (2 * len(phase_channels)) + 1][-1]['angle']
