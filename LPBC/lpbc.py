@@ -55,7 +55,6 @@ class democotroller(pbc.LPBCProcess):
         self.inv_s_max = 7600.
         self.P_PV = np.array([])
         self.Pact_test = np.array([])
-        self.batt_export = np.array([])
         self.batt_cmd = np.array([])
         self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only, mode 4: Load racks
         self.p_ctrl = np.array([])
@@ -164,7 +163,6 @@ class democotroller(pbc.LPBCProcess):
             if self.mode == 3:
                 requests.get("http://131.243.41.47:9090/control?P_ctrl=0,Batt_ctrl=0")
             self.Pact_test = np.zeros((len(phasor_target['phasor_targets']), 1))
-            self.batt_export = np.ones((len(phasor_target['phasor_targets']), 1))
             self.batt_cmd = np.zeros((len(phasor_target['phasor_targets']), 1))
             self.p_ctrl = np.zeros((len(phasor_target['phasor_targets']), 1))
 
@@ -313,7 +311,7 @@ class democotroller(pbc.LPBCProcess):
             if self.mode == 1: # PV disturbance
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
                 self.Qcmd_inv = self.Qcmd / self.local_s_ratio
-                self.P_PV = self.Pact - self.batt_export
+                self.P_PV = self.Pact - self.batt_cmd
                 for phase, inv in zip(range(len(self.Pcmd)), self.inv_id):
                     self.batt_cmd[phase] = int(np.round(self.Pcmd[phase]))
                     if abs(self.batt_cmd[phase]) > 3300:
@@ -322,12 +320,11 @@ class democotroller(pbc.LPBCProcess):
                               (np.sqrt((self.Pcmd[phase] ** 2) + (self.Qcmd[phase] ** 2)))
                     requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
-                    self.batt_export[phase] = self.batt_cmd[phase]
 
             if self.mode == 2: # PV subtracted
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
                 self.Qcmd_inv = self.Qcmd / self.local_s_ratio
-                self.P_PV = self.Pact - self.batt_export
+                self.P_PV = self.Pact - self.batt_cmd
                 for phase, inv in zip(range(len(self.Pcmd)), self.inv_id):
                     self.batt_cmd[phase] = int(np.round(self.Pcmd_inv[phase] - self.P_PV[phase]))
                     if abs(self.batt_cmd[phase]) > 3300:
@@ -336,7 +333,7 @@ class democotroller(pbc.LPBCProcess):
                               (np.sqrt((self.Pcmd_inv[phase] ** 2) + (self.Qcmd_inv[phase] ** 2)))
                     requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
-                    self.batt_export[phase] = self.batt_cmd[phase]
+                   
 
             if self.mode == 3: # PV only
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
