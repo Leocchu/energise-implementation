@@ -1,0 +1,12 @@
+#IMPORTANT: local_channels must be in format (when used with inverters):
+#[channels for local voltages, channels for inverter currents, channels for inverter voltages] Each in consecutive order
+#for example two-phase actuation, ['uPMU_123'/L1','uPMU_123'/L2','uPMU_123/C1','uPMU_123/C2','uPMU_123/L1','uPMU_123/L2'] 
+
+namespace = "GyDX55sFnbr9yCB-mPyXsy4kAUPUY8ftpWX62s6UcnvfIQ=="
+local_channels = ['flexlab1/L2']
+reference_channels = ['flexlab1/L1'] #reference channels should be in consecutive order
+entity = 'user.ent'
+wavemq = '127.0.0.1:4516'
+rate = 2 # number of seconds between calls to 'step'
+name = 'lpbctest'
+spbc = 'spbctest'
