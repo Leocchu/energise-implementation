@@ -57,7 +57,7 @@ class democotroller(pbc.LPBCProcess):
         self.Pact_test = np.array([])
         self.batt_export = np.array([])
         self.batt_cmd = np.array([])
-        self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only
+        self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only, mode 4: Load racks
         self.p_ctrl = np.array([])
         self.group_id = [0,1,2] # TODO: group id for motors corresponding to phase: Must be in ascending order. CHANGE CHANNELS IN TOML!
         self.local_s_ratio = 500/3.3 #TODO: Inverters should have ratio of 500/3.3 ; Load racks : 250
