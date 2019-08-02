@@ -50,7 +50,7 @@ class democotroller(pbc.LPBCProcess):
         self.ametek_phase_shift = 0 # TODO: ametek phase shift in degrees
 
         # https config
-        self.inv_id = 1  # TODO: Change inverter id/s to unique inverter in HIL(lpbc number): Must be in ascending order
+        self.inv_id = 1  # TODO: Change inverter id/s to unique inverter in HIL(lpbc number): Must be in ascending order. CHANGE TOML CHAN!
         self.batt_max = 3300.
         self.inv_s_max = 7600.
         self.P_PV = np.array([])
