@@ -68,7 +68,7 @@ class democotroller(pbc.LPBCProcess):
         self.Kp_ang = 0.068 # TODO
         self.Ki_ang = 0.037 # TODO
         self.Kp_mag = 3.8 # TODO
-        self.Ki_mag = 2.15 #TODO
+        self.Ki_mag = 2.15 # TODO
 
     def phasor_calc(self, local_phasors, reference_phasors, phase_channels):
         # Initialize
@@ -78,8 +78,8 @@ class democotroller(pbc.LPBCProcess):
 
         # Extract latest 50 readings from uPMU
         for phase in range(len(phase_channels)):
-            local[phase] = local_phasors[phase][-50:]
-            ref[phase] = reference_phasors[phase][-50:]
+            local[phase] = local_phasors[phase][-50:] # Change number of readings extracted if needed
+            ref[phase] = reference_phasors[phase][-50:] # Change number of readings extracted if needed
 
         if np.size(self.Vmag_relative) == 0:
             # Initialize
@@ -107,7 +107,7 @@ class democotroller(pbc.LPBCProcess):
                     ref_time = int(ref_packet['time'])
 
                     # check timestamps of local and reference uPMU if within 2 ms
-                    if abs(ref_time - local_time) <= 2000000:
+                    if abs(ref_time - local_time) <= 2000000: # time in nanoseconds. Change if needed.
                         local_index = local[phase].index(local_packet)
                         ref_index = ref[phase].index(ref_packet)
                         # Extract measurements from closest timestamps
