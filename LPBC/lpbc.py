@@ -59,7 +59,8 @@ class democotroller(pbc.LPBCProcess):
         self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only, mode 4: Load racks
         self.p_ctrl = np.array([])
         self.group_id = [0,1,2] # TODO: group id for motors corresponding to phase: Must be in ascending order. CHANGE CHANNELS IN TOML!
-        self.local_s_ratio = 500/3.3 #TODO: Inverters should have ratio of 500/3.3 ; Load racks : 250
+        self.local_s_ratio = 500/3.3 #TODO: Inverters should have ratio of 500/3.3
+        self.local_s_ratio_loadrack = 500 # TODO
         self.Pcmd_inv = np.array([])
         self.Qcmd_inv = np.array([])
 
@@ -349,6 +350,8 @@ class democotroller(pbc.LPBCProcess):
                     requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},P_ctrl={self.p_ctrl[phase][0]},pf_ctrl={pf_ctrl[0]}")
 
             if self.mode == 4: # Load racks
+                self.Pcmd_inv = self.Pcmd / self.local_s_ratio_loadrack
+                self.Qcmd_inv = self.Qcmd / self.local_s_ratio_loadrack
                 for phase, group in zip(range(len(self.Pcmd)), self.group_id):
                     self.p_ctrl[phase] = int(np.round((-1. * self.Pcmd_inv[phase]) + 1000))
                     if self.p_ctrl[phase] > 2000:
