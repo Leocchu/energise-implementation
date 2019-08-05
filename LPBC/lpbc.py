@@ -2,6 +2,7 @@ from pyxbos.process import run_loop, config_from_file
 from pyxbos.drivers import pbc
 from requests_futures.sessions import FuturesSession
 import sys
+import requests
 import numpy as np
 import warnings
 import logging
