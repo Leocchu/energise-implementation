@@ -365,6 +365,8 @@ class democotroller(pbc.LPBCProcess):
                 print(results)
 
             if self.mode == 4: # Load racks
+                self.Pcmd_inv = self.Pcmd / self.local_s_ratio_loadrack
+                self.Qcmd_inv = self.Qcmd / self.local_s_ratio_loadrack
                 session = FuturesSession()
                 urls = []
                 for phase, group in zip(range(len(self.Pcmd)), self.group_id):
