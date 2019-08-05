@@ -146,7 +146,6 @@ class democontroller(pbc.LPBCProcess):
         self.p_ctrl = np.array([])
         self.init_http = 0
         self.group_id = [0,1,2] # TODO: group id for motors: Must be in ascending order. CHANGE TOML
-        self.local_s_ratio = 500/3.3 # TODO
         self.local_s_ratio_loadrack = 500 # TODO
         self.Pcmd_inv = np.array([])
         self.Qcmd_inv = np.array([])
@@ -304,7 +303,7 @@ class democontroller(pbc.LPBCProcess):
             self.Qcmd = self.Qcmd_pu * (self.sbase * 1000)
             print('ORT', self.Pcmd)
 
-            self.Pcmd_inv = self.Pcmd/self.local_s_ratio
+            self.Pcmd_inv = self.Pcmd/self.local_s_ratio_loadrack
             print('INV', self.Pcmd_inv)
             "http to inverters"
             #  Check hostname and port
