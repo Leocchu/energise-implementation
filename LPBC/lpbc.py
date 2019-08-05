@@ -1,10 +1,10 @@
 from pyxbos.process import run_loop, config_from_file
 from pyxbos.drivers import pbc
+from requests_futures.sessions import FuturesSession
 import sys
 import numpy as np
 import warnings
 import logging
-import requests
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 logging.basicConfig(level="INFO", format='%(asctime)s - %(name)s - %(message)s')
@@ -310,6 +310,8 @@ class democotroller(pbc.LPBCProcess):
             #  Check hostname and port
             #  Sends P and Q command to actuator
             if self.mode == 1: # PV disturbance
+                session = FuturesSession()
+                urls = []
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
                 self.Qcmd_inv = self.Qcmd / self.local_s_ratio
                 self.P_PV = self.Pact - self.batt_cmd
@@ -319,10 +321,15 @@ class democotroller(pbc.LPBCProcess):
                         self.batt_cmd[phase] = int(np.sign(self.Pcmd[phase]) * 3300)
                     pf_ctrl = ((np.sign(self.Qcmd[phase]) * -1.0)*abs(self.Pcmd[phase])) /\
                               (np.sqrt((self.Pcmd[phase] ** 2) + (self.Qcmd[phase] ** 2)))
-                    requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
+                    urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
+                responses = map(session.get, urls)
+                results = [resp.result() for resp in responses]  # results is status code
+                print(results)
 
             if self.mode == 2: # PV subtracted
+                session = FuturesSession()
+                urls = []
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
                 self.Qcmd_inv = self.Qcmd / self.local_s_ratio
                 self.P_PV = self.Pact - self.batt_cmd
@@ -332,11 +339,15 @@ class democotroller(pbc.LPBCProcess):
                         self.batt_cmd[phase] = int(np.sign(self.Pcmd_inv[phase]) * 3300)
                     pf_ctrl = ((np.sign(self.Qcmd_inv[phase]) * -1.0)*abs(self.Pcmd_inv[phase])) /\
                               (np.sqrt((self.Pcmd_inv[phase] ** 2) + (self.Qcmd_inv[phase] ** 2)))
-                    requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
+                    urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
-                   
+                responses = map(session.get, urls)
+                results = [resp.result() for resp in responses] # results is status code
+                print(results)
 
             if self.mode == 3: # PV only
+                session = FuturesSession()
+                urls = []
                 self.Pcmd_inv = self.Pcmd / self.local_s_ratio
                 self.Qcmd_inv = self.Qcmd / self.local_s_ratio
                 for phase, inv in zip(range(len(self.Pcmd)), self.inv_id):
@@ -347,20 +358,25 @@ class democotroller(pbc.LPBCProcess):
                     else:
                         pf_ctrl = ((np.sign(self.Qcmd_inv[phase]) * -1.0) * abs(self.Pcmd_inv[phase])) / \
                                   (np.sqrt((self.Pcmd_inv[phase] ** 2) + (self.Qcmd_inv[phase] ** 2)))
-                    requests.get(f"http://131.243.41.47:9090/control?inv_id={inv},P_ctrl={self.p_ctrl[phase][0]},pf_ctrl={pf_ctrl[0]}")
+                    urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},P_ctrl={self.p_ctrl[phase][0]},pf_ctrl={pf_ctrl[0]}")
+                responses = map(session.get, urls)
+                results = [resp.result() for resp in responses] # results is status code
+                print(results)
 
             if self.mode == 4: # Load racks
-                self.Pcmd_inv = self.Pcmd / self.local_s_ratio_loadrack
-                self.Qcmd_inv = self.Qcmd / self.local_s_ratio_loadrack
+                session = FuturesSession()
+                urls = []
                 for phase, group in zip(range(len(self.Pcmd)), self.group_id):
                     self.p_ctrl[phase] = int(np.round((-1. * self.Pcmd_inv[phase]) + 1000))
                     if self.p_ctrl[phase] > 2000:
-                        requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=2000")
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=2000")
                     elif self.p_ctrl[phase] < 0:
-                        requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=0")
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=0")
                     else:
-                        requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl={self.p_ctrl[phase][0]}")
-
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl={self.p_ctrl[phase][0]}")
+                responses = map(session.get, urls)
+                results = [resp.result() for resp in responses] # results is status code
+                print(results)
 
             "Status feedback to SPBC"
             status = {}
