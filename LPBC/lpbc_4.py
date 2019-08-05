@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 import logging
 import requests
+from requests_futures.sessions import FuturesSession
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 logging.basicConfig(level="INFO", format='%(asctime)s - %(name)s - %(message)s')
@@ -134,7 +135,7 @@ class democontroller(pbc.LPBCProcess):
         self.ametek_phase_shift = 0
 
         #https config
-        self.inv_id = 6 # TODO: actuation phases: MUST be in consecutive order
+        self.inv_id = 6 # TODO: actuation phases: MUST be in consecutive order. CHANGE TOML
         self.batt_max = 3300.
         self.inv_s_max = 7600.
         self.P_PV = np.array([])
@@ -144,19 +145,22 @@ class democontroller(pbc.LPBCProcess):
         self.mode = 4 #mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only. mode 4: load racks
         self.p_ctrl = np.array([])
         self.init_http = 0
-        self.group_id = [0,1,2] # TODO: actuation phases for loadracks MUST be in consecutive order
-        self.local_s_ratio_loadrack = 500
+        self.group_id = [0,1,2] # TODO: group id for motors: Must be in ascending order. CHANGE TOML
+        self.local_s_ratio = 500/3.3 # TODO
+        self.local_s_ratio_loadrack = 500 # TODO
         self.Pcmd_inv = np.array([])
+        self.Qcmd_inv = np.array([])
 
 
         # K gains
-        self.Kp_ang = 0.068
-        self.Ki_ang = 0.037
-        self.Kp_mag = 3.8
-        self.Ki_mag = 2.15
+        self.Kp_ang = 0.0240 # TODO
+        self.Ki_ang = 0.0150 # TODO
+        self.Kp_mag = 0 # TODO
+        self.Ki_mag = 0 # TODO
 
     def step(self, local_phasors, reference_phasors, phasor_target):
         self.iteration_counter += 1
+        print(self.iteration_counter)
 
         if phasor_target is None and self.Vang_targ == "initialize":
             print("Iteration", self.iteration_counter, ": No target received by SPBC")
@@ -169,8 +173,9 @@ class democontroller(pbc.LPBCProcess):
             else:
                 "Data extractions"
                 # extract out correct index of phasor target for each phase
-                self.phases = phasor_target['phasor_targets'][0]['channelName']
-                self.phase_channels = [0] * len(phasor_target['phasor_targets'])
+                if len(self.phases) == 0:
+                    self.phases.append(phasor_target['phasor_targets'][0]['channelName'])
+                    self.phase_channels = [0] * len(phasor_target['phasor_targets'])
                 if len(self.phase_channels) > 1:
                     self.phases = [0] * len(self.phase_channels)
                     for i in range(len(self.phase_channels)):
@@ -252,9 +257,9 @@ class democontroller(pbc.LPBCProcess):
                 if phase in np.where(~self.Psat.any(axis=1))[0]:
                     self.ICDI_sigP[phase] = True
                     if self.Pcmd_inv[phase] > 2000:
-                        self.Pmax[phase] = 1000
+                        self.Pmax[phase] = (1000 * self.local_s_ratio_loadrack) / 1000
                     elif self.Pcmd_inv[phase] < 0:
-                        self.Pmax[phase] = -1000
+                        self.Pmax[phase] = (-1000 * self.local_s_ratio_loadrack) / 1000
                 else:
                     self.ICDI_sigP[phase] = False
                     self.Pmax[phase] = None
@@ -297,14 +302,14 @@ class democontroller(pbc.LPBCProcess):
             # convert p.u. to W/ VARs (s base in units of kVA)
             self.Pcmd = self.Pcmd_pu * (self.sbase * 1000)
             self.Qcmd = self.Qcmd_pu * (self.sbase * 1000)
-            print(self.Pcmd)
+            print('ORT', self.Pcmd)
 
-            self.Pcmd_inv = self.Pcmd/self.local_s_ratio_loadrack
-            print(self.Pcmd_inv)
+            self.Pcmd_inv = self.Pcmd/self.local_s_ratio
+            print('INV', self.Pcmd_inv)
             "http to inverters"
             #  Check hostname and port
             #  Sends P and Q command to actuator
-            "http initialization"
+            # http initialization
             if self.init_http == 0:
                 if self.mode == 1 or self.mode == 2:
                     requests.get("http://131.243.41.47:9090/control?P_ctrl=97,Batt_ctrl=0")
@@ -315,18 +320,23 @@ class democontroller(pbc.LPBCProcess):
                 self.p_ctrl = np.zeros((len(phasor_target['phasor_targets']), 1))
                 self.init_http = 1
 
-            if self.mode == 4:
+            if self.mode == 4: # Load racks
+                session = FuturesSession()
+                urls = []
                 for phase, group in zip(range(len(self.Pcmd)), self.group_id):
                     self.p_ctrl[phase] = int(np.round((-1. * self.Pcmd_inv[phase]) + 1000))
-                    http = str(self.p_ctrl[phase][0])
-                    print('INV_OFFSET',self.p_ctrl[phase])
                     if self.p_ctrl[phase] > 2000:
-                        requests.get("http://131.243.41.118:9090/control?group_id={},P_ctrl=2000".format(group))
+                        self.p_ctrl[phase] = 2000
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=2000")
                     elif self.p_ctrl[phase] < 0:
-                        requests.get("http://131.243.41.118:9090/control?group_id={},P_ctrl=0".format(group))
+                        self.p_ctrl[phase] = 0
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=0")
                     else:
-                        self.p_ctrl[phase] = int(np.round(self.p_ctrl[phase]))
-                        requests.get("http://131.243.41.118:9090/control?group_id={},P_ctrl={}".format(group,http))
+                        urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl={self.p_ctrl[phase][0]}")
+                print('INV_OFFSET', self.p_ctrl)
+                responses = map(session.get, urls)
+                results = [resp.result() for resp in responses] # results is status code
+                print(results)
 
             "Status feedback to SPBC"
             status = {}
