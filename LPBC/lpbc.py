@@ -353,7 +353,7 @@ class democotroller(pbc.LPBCProcess):
                     self.p_ctrl[phase] = int(np.round((-1. * self.Pcmd_inv[phase]) + 1000))
                     if self.p_ctrl[phase] > 2000:
                         requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=2000")
-                    elif self.p_ctrl < 0:
+                    elif self.p_ctrl[phase] < 0:
                         requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl=0")
                     else:
                         requests.get(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl={self.p_ctrl[phase][0]}")
