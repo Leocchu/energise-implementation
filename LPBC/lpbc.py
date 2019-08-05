@@ -261,7 +261,7 @@ class democotroller(pbc.LPBCProcess):
             for phase in range(len(self.phase_channels)):
                 if phase in np.where(~self.Psat.any(axis=1))[0]:
                     self.ICDI_sigP[phase] = True
-                    self.Pmax[phase] = self.Pact[phase] * self.local_s_ratio
+                    self.Pmax[phase] = (self.Pact[phase] * self.local_s_ratio) / 1000
                 else:
                     self.ICDI_sigP[phase] = False
                     self.Pmax[phase] = None
@@ -284,7 +284,7 @@ class democotroller(pbc.LPBCProcess):
             for phase in range(len(self.phase_channels)):
                 if phase in np.where(~self.Qsat.any(axis=1))[0]:
                     self.ICDI_sigQ[phase] = True
-                    self.Qmax[phase] = self.Qact[phase] * self.local_s_ratio
+                    self.Qmax[phase] = (self.Qact[phase] * self.local_s_ratio) / 1000
                 else:
                     self.ICDI_sigQ[phase] = False
                     self.Qmax[phase] = None
