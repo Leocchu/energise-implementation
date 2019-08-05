@@ -145,7 +145,7 @@ class democontroller(pbc.LPBCProcess):
         self.p_ctrl = np.array([])
         self.init_http = 0
         self.group_id = [0,1,2] # TODO: actuation phases for loadracks MUST be in consecutive order
-        self.local_s_ratio = 250
+        self.local_s_ratio_loadrack = 500
         self.Pcmd_inv = np.array([])
 
 
@@ -299,7 +299,7 @@ class democontroller(pbc.LPBCProcess):
             self.Qcmd = self.Qcmd_pu * (self.sbase * 1000)
             print(self.Pcmd)
 
-            self.Pcmd_inv = self.Pcmd/self.local_s_ratio
+            self.Pcmd_inv = self.Pcmd/self.local_s_ratio_loadrack
             print(self.Pcmd_inv)
             "http to inverters"
             #  Check hostname and port
