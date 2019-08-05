@@ -365,10 +365,10 @@ class democotroller(pbc.LPBCProcess):
                 print(results)
 
             if self.mode == 4: # Load racks
-                self.Pcmd_inv = self.Pcmd / self.local_s_ratio_loadrack
-                self.Qcmd_inv = self.Qcmd / self.local_s_ratio_loadrack
                 session = FuturesSession()
                 urls = []
+                self.Pcmd_inv = self.Pcmd / self.local_s_ratio_loadrack
+                self.Qcmd_inv = self.Qcmd / self.local_s_ratio_loadrack
                 for phase, group in zip(range(len(self.Pcmd)), self.group_id):
                     self.p_ctrl[phase] = int(np.round((-1. * self.Pcmd_inv[phase]) + 1000))
                     if self.p_ctrl[phase] > 2000:
