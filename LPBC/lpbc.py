@@ -164,7 +164,6 @@ class democotroller(pbc.LPBCProcess):
                 requests.get("http://131.243.41.47:9090/control?P_ctrl=97,Batt_ctrl=0")
             if self.mode == 3:
                 requests.get("http://131.243.41.47:9090/control?P_ctrl=0,Batt_ctrl=0")
-            self.Pact_test = np.zeros((len(phasor_target['phasor_targets']), 1))
             self.batt_cmd = np.zeros((len(phasor_target['phasor_targets']), 1))
             self.p_ctrl = np.zeros((len(phasor_target['phasor_targets']), 1))
 
@@ -244,6 +243,8 @@ class democotroller(pbc.LPBCProcess):
                 self.Qcmd_inv = np.zeros((np.size(self.phase_channels), 1))
                 self.intError_ang = np.zeros((np.size(self.phase_channels), 1))
                 self.intError_mag = np.zeros((np.size(self.phase_channels), 1))
+                self.batt_cmd = np.zeros((np.size(self.phase_channels), 1))
+                self.p_ctrl = np.zeros((np.size(self.phase_channels), 1))
 
             "Checking for P saturation (anti-windup control)"
             # find indicies where Pact + tolerance is less than Pcmd
