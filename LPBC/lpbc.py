@@ -60,7 +60,7 @@ class democotroller(pbc.LPBCProcess):
         self.mode = 0  # mode 1: PV as disturbance, mode 2: PV calculated, mode 3: PV only, mode 4: Load racks
         self.p_ctrl = np.array([])
         self.group_id = [0,1,2] # TODO: group id for motors corresponding to phase: Must be in ascending order. CHANGE CHANNELS IN TOML!
-        self.local_s_ratio = (500*15/3.3)*15000 # CHECK  Inverters scaling ratio
+        self.local_s_ratio = 500/3.3 # CHECK  Inverters scaling ratio
         self.local_s_ratio_loadrack = 500 # TODO Loadrack scaling ratio
         self.Pcmd_inv = np.array([])
         self.Qcmd_inv = np.array([])
@@ -164,8 +164,6 @@ class democotroller(pbc.LPBCProcess):
                 requests.get("http://131.243.41.47:9090/control?P_ctrl=97,Batt_ctrl=0")
             if self.mode == 3:
                 requests.get("http://131.243.41.47:9090/control?P_ctrl=0,Batt_ctrl=0")
-            self.batt_cmd = np.zeros((len(phasor_target['phasor_targets']), 1))
-            self.p_ctrl = np.zeros((len(phasor_target['phasor_targets']), 1))
 
         if phasor_target is None and self.Vang_targ == "initialize":
             print("Iteration", self.iteration_counter, ": No target received by SPBC")
