@@ -49,11 +49,12 @@ class democotroller(pbc.LPBCProcess):
         self.phase_channels = []
         self.phases = []
         self.ametek_phase_shift = 0 # TODO: ametek phase shift in degrees
+        self.PMU_timestamp_window = 2000000 # time in nanoseconds. Change if needed.
 
         # https config
         self.inv_id = 1  # TODO: Change inverter id/s to unique inverter in HIL(lpbc number): Must be in ascending order. CHANGE TOML CHAN!
         self.batt_max = 3300.
-        self.inv_s_max = 7600.
+        self.inv_s_max = 7600. * 0.97 #Keep inv max limit at 97%. Inv may become unstable at 100%
         self.P_PV = np.array([])
         self.Pact_test = np.array([])
         self.batt_cmd = np.array([])
@@ -108,7 +109,7 @@ class democotroller(pbc.LPBCProcess):
                     ref_time = int(ref_packet['time'])
 
                     # check timestamps of local and reference uPMU if within 2 ms
-                    if abs(ref_time - local_time) <= 2000000: # time in nanoseconds. Change if needed.
+                    if abs(ref_time - local_time) <= self.PMU_timestamp_window: # time in nanoseconds. Change if needed.
                         local_index = local[phase].index(local_packet)
                         ref_index = ref[phase].index(ref_packet)
                         # Extract measurements from closest timestamps
@@ -309,6 +310,7 @@ class democotroller(pbc.LPBCProcess):
             "http to inverters"
             #  Check hostname and port
             #  Sends P and Q command to actuator
+
             if self.mode == 1: # PV disturbance
                 session = FuturesSession()
                 urls = []
@@ -319,12 +321,20 @@ class democotroller(pbc.LPBCProcess):
                     self.batt_cmd[phase] = int(np.round(self.Pcmd[phase]))
                     if abs(self.batt_cmd[phase]) > 3300:
                         self.batt_cmd[phase] = int(np.sign(self.Pcmd[phase]) * 3300)
+                    if (self.batt_cmd[phase] + self.P_PV[phase])**2 + (self.Qcmd[phase])**2 > self.inv_s_max**2:
+                        self.Qcmd[phase] = np.sign(self.Qcmd[phase]) * np.sqrt(
+                            self.inv_s_max ** 2 - (self.batt_cmd[phase] + self.P_PV[phase]) ** 2)
                     pf_ctrl = ((np.sign(self.Qcmd[phase]) * -1.0)*abs(self.Pcmd[phase])) /\
                               (np.sqrt((self.Pcmd[phase] ** 2) + (self.Qcmd[phase] ** 2)))
                     urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
                 responses = map(session.get, urls)
                 results = [resp.result() for resp in responses]  # results is status code
+                for i in range(len(results)):
+                    if results[i].status_code == 200:
+                        results[i] = 'success'
+                    else:
+                        results[i] = 'failure'
                 print(results)
 
             if self.mode == 2: # PV subtracted
@@ -337,12 +347,20 @@ class democotroller(pbc.LPBCProcess):
                     self.batt_cmd[phase] = int(np.round(self.Pcmd_inv[phase] - self.P_PV[phase]))
                     if abs(self.batt_cmd[phase]) > 3300:
                         self.batt_cmd[phase] = int(np.sign(self.Pcmd_inv[phase]) * 3300)
+                    if (self.batt_cmd[phase] + self.P_PV[phase])**2 + (self.Qcmd[phase])**2 > self.inv_s_max**2:
+                        self.Qcmd[phase] = np.sign(self.Qcmd[phase]) * np.sqrt(
+                            self.inv_s_max ** 2 - (self.batt_cmd[phase] + self.P_PV[phase]) ** 2)
                     pf_ctrl = ((np.sign(self.Qcmd_inv[phase]) * -1.0)*abs(self.Pcmd_inv[phase])) /\
                               (np.sqrt((self.Pcmd_inv[phase] ** 2) + (self.Qcmd_inv[phase] ** 2)))
                     urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},Batt_ctrl={self.batt_cmd[phase][0]},"
                                   f"pf_ctrl={pf_ctrl[0]}")
                 responses = map(session.get, urls)
                 results = [resp.result() for resp in responses] # results is status code
+                for i in range(len(results)):
+                    if results[i].status_code == 200:
+                        results[i] = 'success'
+                    else:
+                        results[i] = 'failure'
                 print(results)
 
             if self.mode == 3: # PV only
@@ -354,13 +372,18 @@ class democotroller(pbc.LPBCProcess):
                     self.p_ctrl[phase] = int(np.round((abs(self.Pcmd_inv[phase]) / self.inv_s_max) * 100))
                     if self.p_ctrl[phase] > 97:
                         self.p_ctrl[phase] = 97
-                        pf_ctrl = ((np.sign(self.Qcmd_inv[phase]) * -1.0) * abs(self.Pcmd_inv[phase])) / (self.inv_s_max * 0.97)
+                        pf_ctrl = 1
                     else:
                         pf_ctrl = ((np.sign(self.Qcmd_inv[phase]) * -1.0) * abs(self.Pcmd_inv[phase])) / \
                                   (np.sqrt((self.Pcmd_inv[phase] ** 2) + (self.Qcmd_inv[phase] ** 2)))
                     urls.append(f"http://131.243.41.47:9090/control?inv_id={inv},P_ctrl={self.p_ctrl[phase][0]},pf_ctrl={pf_ctrl[0]}")
                 responses = map(session.get, urls)
                 results = [resp.result() for resp in responses] # results is status code
+                for i in range(len(results)):
+                    if results[i].status_code == 200:
+                        results[i] = 'success'
+                    else:
+                        results[i] = 'failure'
                 print(results)
 
             if self.mode == 4: # Load racks
@@ -378,6 +401,11 @@ class democotroller(pbc.LPBCProcess):
                         urls.append(f"http://131.243.41.118:9090/control?group_id={group},P_ctrl={self.p_ctrl[phase][0]}")
                 responses = map(session.get, urls)
                 results = [resp.result() for resp in responses] # results is status code
+                for i in range(len(results)):
+                    if results[i].status_code == 200:
+                        results[i] = 'success'
+                    else:
+                        results[i] = 'failure'
                 print(results)
 
             "Status feedback to SPBC"
