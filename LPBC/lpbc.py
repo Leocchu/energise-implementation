@@ -67,10 +67,10 @@ class democotroller(pbc.LPBCProcess):
         self.Qcmd_inv = np.array([])
 
         # K gains
-        self.Kp_ang = 0.068 # TODO
-        self.Ki_ang = 0.037 # TODO
-        self.Kp_mag = 3.8 # TODO
-        self.Ki_mag = 2.15 # TODO
+        self.Kp_ang = [1,2,3] # TODO
+        self.Ki_ang = [1,2,3] # TODO
+        self.Kp_mag = [1,2,3] # TODO
+        self.Ki_mag = [1,2,3] # TODO
 
     def phasor_calc(self, local_phasors, reference_phasors, phase_channels):
         # Initialize
@@ -244,14 +244,17 @@ class democotroller(pbc.LPBCProcess):
                 self.ICDI_sigQ = np.zeros((np.size(self.phase_channels), 1), dtype=bool)
                 self.Pmax = np.empty((np.size(self.phase_channels), 1))
                 self.Qmax = np.empty((np.size(self.phase_channels), 1))
-                self.Pcmd = np.zeros((np.size(self.phase_channels), 1))
-                self.Qcmd = np.zeros((np.size(self.phase_channels), 1))
                 self.Pcmd_inv = np.zeros((np.size(self.phase_channels), 1))
                 self.Qcmd_inv = np.zeros((np.size(self.phase_channels), 1))
+                self.currentIntError_ang = np.zeros((np.size(self.phase_channels), 1))
+                self.currentIntError_mag = np.zeros((np.size(self.phase_channels), 1))
                 self.intError_ang = np.zeros((np.size(self.phase_channels), 1))
                 self.intError_mag = np.zeros((np.size(self.phase_channels), 1))
-                self.batt_cmd = np.zeros((np.size(self.phase_channels), 1))
-                self.p_ctrl = np.zeros((np.size(self.phase_channels), 1))
+                self.Pcmd_pu = np.zeros((np.size(self.phase_channels), 1))
+                self.Qcmd_pu = np.zeros((np.size(self.phase_channels), 1))
+                self.batt_cmd = np.zeros((len(phasor_target['phasor_targets']), 1))
+                self.p_ctrl = np.zeros((len(phasor_target['phasor_targets']), 1))
+
 
             "Checking for P saturation (anti-windup control)"
             # find indicies where Pact + tolerance is less than Pcmd
