@@ -300,13 +300,14 @@ class democotroller(pbc.LPBCProcess):
                     self.Qmax[phase] = None
 
             "PI control algorithm"
-            self.currentIntError_ang = (self.Ki_ang * self.phasor_error_ang) * sat_arrayP
-            self.intError_ang += self.currentIntError_ang
-            self.Pcmd_pu = (self.Kp_ang * self.phasor_error_ang) + self.intError_ang
+            for phase in range(len(self.phase_channels)):
+                self.currentIntError_ang[phase] = (self.Ki_ang[phase] * self.phasor_error_ang[phase]) * sat_arrayP[phase]
+                self.intError_ang[phase] += self.currentIntError_ang[phase]
+                self.Pcmd_pu[phase] = (self.Kp_ang[phase] * self.phasor_error_ang[phase]) + self.intError_ang[phase]
 
-            self.currentIntError_mag = (self.Ki_mag * self.phasor_error_mag) * sat_arrayQ
-            self.intError_mag += self.currentIntError_mag
-            self.Qcmd_pu = (self.Kp_mag * self.phasor_error_mag) + self.intError_mag
+                self.currentIntError_mag[phase] = (self.Ki_mag[phase] * self.phasor_error_mag[phase]) * sat_arrayQ[phase]
+                self.intError_mag[phase] += self.currentIntError_mag[phase]
+                self.Qcmd_pu[phase] = (self.Kp_mag[phase] * self.phasor_error_mag[phase]) + self.intError_mag[phase]
 
             # returns 8 signals: ICDI_sigP, ICDI_sigQ, Pmax, Qmax, phasor errors(2) to S-PBC; Pcmd, Qcmd to actuator
             # signals are column vector format: [number of phases/actuators x 1]
