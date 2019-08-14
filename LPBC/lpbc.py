@@ -217,6 +217,14 @@ class democotroller(pbc.LPBCProcess):
 
             # calculate relative voltage phasor
             self.phasor_calc(local_phasors, reference_phasors, self.phase_channels)
+            
+            # accounts for special cases where one angle crosses zero while the other is behind zero
+            for phase in range(len(self.phase_channels)):
+                if abs(self.Vang_relative[phase]) > 300:
+                    if self.Vang_relative[phase] > 0:
+                        self.Vang_relative[phase] = self.Vang_relative[phase] - 360.
+                    elif self.Vang_relative[phase] < 0:
+                        self.Vang_relative[phase] = self.Vang_relative[phase] + 360.
 
             # calculate P/Q from actuators
             self.PQ_solver(local_phasors, self.phase_channels)
